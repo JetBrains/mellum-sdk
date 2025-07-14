@@ -39,7 +39,7 @@ jobs:
         env:
           JB_SPACE_CLIENT_ID: ${{ secrets.JB_SPACE_CLIENT_ID }}
           JB_SPACE_CLIENT_SECRET: ${{ secrets.JB_SPACE_CLIENT_SECRET }}
-          OLLAMA_IMAGE_URL: ${{ vars.OLLAMA_IMAGE_URL }}
+          OLLAMA_IMAGE_URL: ${{ secrets.OLLAMA_IMAGE_URL }}
         run: ./gradlew jvmOllamaTest --no-parallel --continue
 
       - name: Collect reports
