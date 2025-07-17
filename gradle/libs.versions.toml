@@ -4,13 +4,13 @@ kotlin-logging = "7.0.7"
 ktor3 = "3.0.3"
 logback = "1.5.13"
 lsp4j = "0.24.0"
-shadow = "8.1.1"
 slf4j = "2.0.17"
 testcontainers = "1.19.7"
 codeFeaturesCli = "1.0.0-beta.91"
 
 [libraries]
 eclipse-lsp4 = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlin-logging"}
 codeFeaturesCli = { module = "ai.jetbrains.code.features:code-features-common-cli", version.ref = "codeFeaturesCli" }
@@ -25,4 +25,3 @@ testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.re
 
 [plugins]
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
