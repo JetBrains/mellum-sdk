@@ -1,4 +1,4 @@
-package mellum.sdk.gradle.publish.maven
+package ai.jetbrains.code.mellum.sdk.gradle.publish.maven
 
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -6,7 +6,6 @@ import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import java.net.URL
-
 
 object Publishing {
     fun Project.publishToMaven() {
