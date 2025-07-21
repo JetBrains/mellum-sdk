@@ -6,14 +6,13 @@ logback = "1.5.13"
 lsp4j = "0.24.0"
 slf4j = "2.0.17"
 testcontainers = "1.19.7"
-codeFeaturesCli = "1.0.0-beta.91"
+code = "1.0.0-beta.91"
 
 [libraries]
 eclipse-lsp4 = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlin-logging"}
-codeFeaturesCli = { module = "ai.jetbrains.code.features:code-features-common-cli", version.ref = "codeFeaturesCli" }
+code-features = { module = "ai.jetbrains.code.features:code-features-common", version.ref = "code" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }

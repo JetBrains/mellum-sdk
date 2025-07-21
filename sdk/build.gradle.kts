@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.codeFeaturesCli)
+    implementation(libs.code.features)
     implementation(libs.eclipse.lsp4)
 
     implementation(libs.ktor.client.cio)
@@ -23,7 +23,7 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
 
-    testImplementation(libs.kotlin.test)
+    testImplementation(kotlin("test"))
     implementation(libs.kotlin.logging)
     testImplementation(libs.slf4j.api)
     testRuntimeOnly(libs.logback.classic)  // Added logback as the logging implementation

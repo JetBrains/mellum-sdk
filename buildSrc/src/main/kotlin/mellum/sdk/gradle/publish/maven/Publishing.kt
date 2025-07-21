@@ -12,7 +12,6 @@ object Publishing {
     fun Project.publishToMaven() {
         publishTo({
             it.graziePublic(project)
-            it.artifactsMaven(project)
         }) {
             it.publications(
                 Action {
@@ -84,17 +83,6 @@ object Publishing {
             repositories(Action { configureRepository(this) })
             configurePublish(this)
         }
-    }
-
-    private fun RepositoryHandler.artifactsMaven(project: Project) {
-        maven(
-            Action {
-                val repo = this
-
-                repo.name = "artifacts"
-                repo.url = project.rootProject.layout.buildDirectory.dir("artifacts/maven").get().asFile.toURI()
-            }
-        )
     }
 
     private fun RepositoryHandler.graziePublic(project: Project) {
