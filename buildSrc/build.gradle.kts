@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kotlin.gradle.plugin)
+    implementation(kotlin("gradle-plugin"))
 }
 
 kotlin {
