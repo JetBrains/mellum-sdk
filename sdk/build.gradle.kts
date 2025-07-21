@@ -1,4 +1,4 @@
-import mellum.sdk.gradle.publish.maven.Publishing.publishToMaven
+import ai.jetbrains.code.mellum.sdk.gradle.publish.maven.Publishing.publishToMaven
 
 group = rootProject.group
 version = rootProject.version
