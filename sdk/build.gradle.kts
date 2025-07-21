@@ -23,7 +23,7 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
 
-    testImplementation(kotlin("test"))
+    testImplementation(libs.kotlin.test)
     implementation(libs.kotlin.logging)
     testImplementation(libs.slf4j.api)
     testRuntimeOnly(libs.logback.classic)  // Added logback as the logging implementation
