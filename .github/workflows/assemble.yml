@@ -1,4 +1,4 @@
-name: Compile and Assemble
+name: Assemble
 
 on:
   workflow_dispatch:  # Manual trigger
@@ -35,11 +35,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Check Compilation
-        run: ./gradlew compileKotlin compileTestKotlin --no-parallel
-
       - name: Assemble
-        run: ./gradlew assemble --no-parallel
+        run: ./gradlew assemble
 
       - name: Collect reports
         if: always()
