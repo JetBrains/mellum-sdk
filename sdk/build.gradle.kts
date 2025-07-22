@@ -6,6 +6,7 @@ version = rootProject.version
 plugins {
     kotlin
     alias(libs.plugins.kotlin.serialization)
+    id("ai.kotlin.jvm.publish")
 }
 
 repositories {
