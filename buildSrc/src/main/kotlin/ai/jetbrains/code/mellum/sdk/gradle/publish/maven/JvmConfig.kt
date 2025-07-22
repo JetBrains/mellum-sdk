@@ -12,7 +12,7 @@ internal fun Project.configureJvmJarManifest(taskName: String) {
                 attributes(
                     "Implementation-Title" to project.name,
                     "Implementation-Version" to project.version,
-                    "Automatic-Module-Name" to project.name.replace("-", ".") + ".jvm",
+                    "Automatic-Module-Name" to project.name.replace("-", "."),
                 )
             }
         )
