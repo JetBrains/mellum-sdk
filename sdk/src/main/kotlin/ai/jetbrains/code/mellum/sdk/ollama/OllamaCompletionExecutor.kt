@@ -26,12 +26,10 @@ class OllamaCompletionExecutor(
      * @return The text response from the LLM service
      * @throws IllegalStateException if no chat service is found for the specified model
      */
-    suspend fun execute(completionPrompt: String, system: String = "", suffix: String = ""): String {
+    suspend fun execute(completionPrompt: String): String {
         logger.info { "Executing OLLAMA request" }
         val request = OllamaCompletionRequestDTO(
             model = modelName,
-            system = system,
-            suffix = suffix,
             prompt = completionPrompt,
             stream = false,
         )
