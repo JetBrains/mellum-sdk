@@ -1,5 +1,5 @@
 group = "ai.jetbrains.code.mellum.sdk"
-version = "0.0.1"
+version = "0.0.2"
 
 tasks.register("reportProjectVersionToTeamCity") {
     doLast {
