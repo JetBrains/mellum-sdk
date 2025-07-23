@@ -3,7 +3,7 @@ package ai.jetbrains.code.mellum.sdk.ollama
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 // Default model ID if none is provided
-const val DEFAULT_OLLAMA_MODEL_ID = "JetBrains/Mellum-4b-sft-python"
+const val DEFAULT_OLLAMA_MODEL_ID = "JetBrains/Mellum-4b-sft-all"
 
 /**
  * Executes code-related prompts using LLM Chat services.

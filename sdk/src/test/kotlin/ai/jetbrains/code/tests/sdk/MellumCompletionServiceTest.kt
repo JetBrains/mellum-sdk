@@ -36,7 +36,8 @@ class MellumCompletionServiceTest {
             JVMLanguageProvider,
             JVMFileSystemProvider.ReadOnly,
             JVMWorkspaceProvider(emptySet()),
-            ollamaFixtureClient
+            ollamaFixtureClient,
+            "JetBrains/Mellum-4b-sft-python"
         ).getCompletion(testFile, Position(2, 23))
 
         assertNotNull(result)

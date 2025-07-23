@@ -1,7 +1,7 @@
 package ai.jetbrains.code.mellum.sdk
 
 import ai.grazie.code.features.common.completion.context.strategy.contexts
-import ai.grazie.code.features.common.completion.context.strategy.legacyDirectoryStrategy
+import ai.grazie.code.features.common.completion.context.strategy.legacyIntersectionOverUnionStrategy
 import ai.grazie.code.files.model.*
 import ai.grazie.code.files.model.DocumentProvider.Position
 import ai.jetbrains.code.mellum.sdk.ollama.DEFAULT_OLLAMA_MODEL_ID
@@ -33,8 +33,8 @@ class MellumCompletionService<Path, Document>(
         val textBeforeCursor = fileContent.substring(0, offset)
         val textAfterCursor = fileContent.substring(offset, fileContent.length)
 
-        val languageSet = LanguageSet.Completion.Jet.Kotlin
-        val strategy = legacyDirectoryStrategy(
+        val languageSet = LanguageSet.of(runBlocking { languageProvider.language(file) })
+        val strategy = legacyIntersectionOverUnionStrategy(
             queriedLanguages = languageSet,
             languageProvider = languageProvider,
             fs = fileSystemProvider,

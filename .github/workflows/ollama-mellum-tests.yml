@@ -35,9 +35,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Check Compilation
-        run: ./gradlew compileKotlin compileTestKotlin --no-parallel
-
       - name: Run Ollama Tests with Gradle Wrapper
         env:
           OLLAMA_IMAGE_URL: ${{ secrets.OLLAMA_IMAGE_URL }}
