@@ -1,11 +1,6 @@
 package ai.jetbrains.code.mellum.sdk.lsp
 
-import ai.grazie.code.files.model.DocumentProvider
-import ai.grazie.code.files.model.FileSystemProvider
-import ai.grazie.code.files.model.LanguageProvider
-import ai.grazie.code.files.model.WorkspaceProvider
-import ai.grazie.code.files.model.charsByPath
-import ai.grazie.code.files.model.toOffset
+import ai.grazie.code.files.model.*
 import ai.jetbrains.code.mellum.sdk.MellumCompletionService
 import ai.jetbrains.code.mellum.sdk.ollama.OllamaClient
 import kotlinx.coroutines.runBlocking
@@ -23,6 +18,9 @@ interface MellumCompletionHandler {
 
     @JsonRequest("completion")
     fun completion(params: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>>
+
+    @JsonRequest("rawCompletion")
+    fun rawCompletion(params: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>>
 }
 
 class MellumLspCompletionService(
@@ -33,6 +31,7 @@ class MellumLspCompletionService(
     private val ollamaClient: OllamaClient = OllamaClient(),
     private val modelName: String
 ) : MellumCompletionHandler {
+    // Applied little post-formatting for VSCode
     override fun completion(params: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>> {
         return CompletableFuture.supplyAsync<Either<List<CompletionItem>, CompletionList>> {
             val documentPosition = DocumentProvider.Position(params.position.line, params.position.character)
@@ -51,6 +50,23 @@ class MellumLspCompletionService(
 
             val completionItem = CompletionItem(formatCompletionResult)
             completionItem.insertText = formatCompletionResult
+
+            Either.forLeft(listOf(completionItem))
+        }
+    }
+
+    // Returns the raw completion result without post-formatting
+    override fun rawCompletion(params: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>> {
+        return CompletableFuture.supplyAsync<Either<List<CompletionItem>, CompletionList>> {
+            val documentPosition = DocumentProvider.Position(params.position.line, params.position.character)
+            val completionResult = MellumCompletionService(
+                documentProvider, languageProvider, fileSystemProvider, workspaceProvider, ollamaClient, modelName
+            ).getCompletion(
+                URI(params.textDocument.uri), documentPosition
+            )
+
+            val completionItem = CompletionItem(completionResult)
+            completionItem.insertText = completionResult
 
             Either.forLeft(listOf(completionItem))
         }
