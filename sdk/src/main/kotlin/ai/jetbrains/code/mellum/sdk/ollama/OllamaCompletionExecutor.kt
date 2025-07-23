@@ -21,8 +21,6 @@ class OllamaCompletionExecutor(
      * Executes the given prompt and returns the response as message.
      *
      * @param completionPrompt The prompt to execute
-     * @param system the utility field for context
-     * @param suffix the utility field for suffix
      * @return The text response from the LLM service
      * @throws IllegalStateException if no chat service is found for the specified model
      */
