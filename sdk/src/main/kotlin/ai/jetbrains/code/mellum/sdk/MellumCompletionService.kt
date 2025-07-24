@@ -26,8 +26,8 @@ class MellumCompletionService<Path, Document>(
 
     private val completionExecutor = OllamaCompletionExecutor(ollamaClient, modelName)
 
-    fun getCompletion(file: Path, position: Position): String {
-        val fileContent = runBlocking { documentProvider.charsByPath(file) } ?: return ""
+    fun getCompletion(file: Path, position: Position): String = runBlocking {
+        val fileContent = documentProvider.charsByPath(file) ?: return@runBlocking ""
         val offset = position.toOffset(fileContent)
         logger.info { "Executing completion at offset $offset in file $file" }
         val textBeforeCursor = fileContent.substring(0, offset)
@@ -46,11 +46,9 @@ class MellumCompletionService<Path, Document>(
         )
 
         val finalPrompt = buildString {
-            runBlocking {
-                strategy.contexts(file, offset).collect { context ->
-                    append("<filename>${context.path}\n")
-                    append(context.content)
-                }
+            strategy.contexts(file, offset).collect { context ->
+                append("<filename>${context.path}\n")
+                append(context.content)
             }
             logger.info { "Prepared context: ${this.length} chars" }
 
@@ -68,6 +66,6 @@ class MellumCompletionService<Path, Document>(
         }
 
         logger.info { "Got completion: $completion" }
-        return completion
+        return@runBlocking completion
     }
 }
