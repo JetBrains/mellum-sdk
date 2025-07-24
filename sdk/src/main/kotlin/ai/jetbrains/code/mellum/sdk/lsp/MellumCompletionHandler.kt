@@ -43,10 +43,12 @@ class MellumLspCompletionService(
             val fileContent = runBlocking { documentProvider.charsByPath(URI(params.textDocument.uri)) }
                 ?: return@supplyAsync Either.forLeft(emptyList())
             val offset = documentPosition.toOffset(fileContent)
-            val textOnLineBeforeCursor = fileContent.substring(0, offset).substringAfterLast("\n")
-                .trim() // get the last line where completion was triggered
-            // concat with line prefix the completion
-            val formatCompletionResult = textOnLineBeforeCursor + completionResult.substringBefore("\n#")
+            val textOnLineBeforeCursor = fileContent
+                .substring(0, offset)
+                .substringAfterLast("\n") // get the last line
+                .substringAfterLast(" ") // get the last word before completion if present
+                .trim()
+            val formatCompletionResult = textOnLineBeforeCursor + completionResult
 
             val completionItem = CompletionItem(formatCompletionResult)
             completionItem.insertText = formatCompletionResult

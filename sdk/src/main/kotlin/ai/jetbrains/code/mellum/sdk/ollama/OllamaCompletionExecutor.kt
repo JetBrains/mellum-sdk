@@ -30,6 +30,7 @@ class OllamaCompletionExecutor(
             model = modelName,
             prompt = completionPrompt,
             stream = false,
+            raw = true
         )
         val result = client.completion(request)
         return result.response ?: error("No message in response")
