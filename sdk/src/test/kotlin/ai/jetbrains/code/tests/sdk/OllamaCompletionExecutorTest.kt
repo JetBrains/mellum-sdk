@@ -23,7 +23,7 @@ class OllamaCompletionExecutorTest {
     fun test() = runBlocking {
         val prompt = "fun sum(a: Int, b: Int) = "
 
-        val result = OllamaCompletionExecutor(ollamaFixtureClient, "JetBrains/Mellum-4b-sft-python").execute(prompt)
+        val result = OllamaCompletionExecutor(ollamaFixtureClient, "JetBrains/Mellum-4b-sft-kotlin").execute(prompt)
         assertTrue(result.isNotEmpty(), "Completion result should not be empty")
     }
 }

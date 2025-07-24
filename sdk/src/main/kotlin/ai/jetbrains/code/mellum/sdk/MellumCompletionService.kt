@@ -45,25 +45,26 @@ class MellumCompletionService<Path, Document>(
             softTimeout = 50.milliseconds,
         )
 
-        val finalPrompt = StringBuilder()
-        runBlocking {
-            strategy.contexts(file, offset).collect { context ->
-                finalPrompt.append("<filename>${context.path}\n")
-                finalPrompt.append(context.content)
+        val finalPrompt = buildString {
+            runBlocking {
+                strategy.contexts(file, offset).collect { context ->
+                    append("<filename>${context.path}\n")
+                    append(context.content)
+                }
             }
-        }
-        logger.info { "Prepared context: ${finalPrompt.length} chars" }
+            logger.info { "Prepared context: ${this.length} chars" }
 
-        finalPrompt.append("<filename>")
-        finalPrompt.append(file)
-        finalPrompt.append("<fim_suffix>")
-        finalPrompt.append(textAfterCursor)
-        finalPrompt.append("<fim_prefix>")
-        finalPrompt.append(textBeforeCursor)
-        finalPrompt.append("<fim_middle>")
+            append("<filename>")
+            append(file)
+            append("<fim_suffix>")
+            append(textAfterCursor)
+            append("<fim_prefix>")
+            append(textBeforeCursor)
+            append("<fim_middle>")
+        }
 
         val completion = runBlocking {
-            completionExecutor.execute(finalPrompt.toString())
+            completionExecutor.execute(finalPrompt)
         }
 
         logger.info { "Got completion: $completion" }
