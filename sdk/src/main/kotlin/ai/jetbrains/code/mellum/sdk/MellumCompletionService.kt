@@ -33,7 +33,7 @@ class MellumCompletionService<Path, Document>(
         val textBeforeCursor = fileContent.substring(0, offset)
         val textAfterCursor = fileContent.substring(offset, fileContent.length)
 
-        val languageSet = LanguageSet.of(runBlocking { languageProvider.language(file) })
+        val languageSet = LanguageSet.of(languageProvider.language(file))
         val strategy = legacyIntersectionOverUnionStrategy(
             queriedLanguages = languageSet,
             languageProvider = languageProvider,
@@ -61,9 +61,7 @@ class MellumCompletionService<Path, Document>(
             append("<fim_middle>")
         }
 
-        val completion = runBlocking {
-            completionExecutor.execute(finalPrompt)
-        }
+        val completion = completionExecutor.execute(finalPrompt)
 
         logger.info { "Got completion: $completion" }
         return@runBlocking completion
