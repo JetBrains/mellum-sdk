@@ -6,7 +6,7 @@ logback = "1.5.13"
 lsp4j = "0.24.0"
 slf4j = "2.0.17"
 testcontainers = "1.19.7"
-code = "1.0.0-beta.91"
+code = "1.0.0-beta.94"
 
 [libraries]
 eclipse-lsp4 = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
