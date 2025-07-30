@@ -40,15 +40,26 @@ class MellumCompletionService<Path, Document>(
         return (text.length / 4) + 1
     }
 
-    private fun prepareTokenLimitedPrompt(
-        prefix: String, suffix: String, filePath: Path, contextItems: List<CollectedContext<Path>>, tokenLimit: Int
+    private suspend fun prepareTokenLimitedPrompt(
+        prefix: String,
+        suffix: String,
+        filePath: Path,
+        contextItems: List<CollectedContext<Path>>,
+        tokenLimit: Int
     ): String {
         val essentialTagsTokens = FimTags.entries.sumOf { approximateTokenCount(it.charValue) }
         var availableTokens = tokenLimit - essentialTagsTokens
         val result = StringBuilder()
 
         // 1. Process file path (first priority)
-        val filePathString = fileSystemProvider.toAbsolutePathString(filePath)
+        val relativeFilePath = fileSystemProvider.relativize(
+            workspaceProvider.findWorkspaceRoot(filePath) ?: filePath, filePath
+        )
+        val filePathString = when (relativeFilePath) {
+            null, "" -> fileSystemProvider.toAbsolutePathString(filePath)
+            else -> relativeFilePath
+        }
+
         val filePathTruncatedResult = asIsOrTruncated(filePathString, availableTokens, true)
         val filePathToUse = filePathTruncatedResult.first
         availableTokens -= filePathTruncatedResult.second
@@ -67,7 +78,15 @@ class MellumCompletionService<Path, Document>(
         for (item in contextItems) {
             if (availableTokens <= 0) break
 
-            val contextItemWithTag = "${FimTags.FILENAME.charValue}${item.path}\n${item.content}"
+            val relativeContextFilePath = fileSystemProvider.relativize(
+                workspaceProvider.findWorkspaceRoot(item.path) ?: item.path, item.path
+            )
+            val contextPath = when (relativeContextFilePath) {
+                null, "" -> fileSystemProvider.toAbsolutePathString(item.path)
+                else -> relativeContextFilePath
+            }
+
+            val contextItemWithTag = "${FimTags.FILENAME.charValue}$contextPath\n${item.content}"
             val contextItemTokens = approximateTokenCount(contextItemWithTag)
 
             if (contextItemTokens <= availableTokens) {
