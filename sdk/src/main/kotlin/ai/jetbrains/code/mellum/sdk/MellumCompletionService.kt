@@ -1,5 +1,6 @@
 package ai.jetbrains.code.mellum.sdk
 
+import ai.grazie.code.features.common.completion.context.CollectedContext
 import ai.grazie.code.features.common.completion.context.strategy.contexts
 import ai.grazie.code.features.common.completion.context.strategy.legacyIntersectionOverUnionStrategy
 import ai.grazie.code.files.model.*
@@ -8,6 +9,7 @@ import ai.jetbrains.code.mellum.sdk.ollama.DEFAULT_OLLAMA_MODEL_ID
 import ai.jetbrains.code.mellum.sdk.ollama.OllamaClient
 import ai.jetbrains.code.mellum.sdk.ollama.OllamaCompletionExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -25,14 +27,11 @@ class MellumCompletionService<Path, Document>(
         private val logger = KotlinLogging.logger {}
     }
 
-    private enum class FimTags(str: String) {
+    private enum class FimTags(val charValue: String) {
         FILENAME("<filename>"),
         SUFFIX("<fim_suffix>"),
         PREFIX("<fim_prefix>"),
         MIDDLE("<fim_middle>");
-
-        val charLength: Int = str.length
-        val charValue: String = str
     }
 
     private val completionExecutor = OllamaCompletionExecutor(ollamaClient, modelName)
@@ -42,73 +41,61 @@ class MellumCompletionService<Path, Document>(
     }
 
     private fun prepareTokenLimitedPrompt(
-        prefix: String,
-        suffix: String,
-        filePath: Path,
-        contextItems: List<Pair<Path, String>>,
-        tokenLimit: Int
+        prefix: String, suffix: String, filePath: Path, contextItems: List<CollectedContext<Path>>, tokenLimit: Int
     ): String {
-        val essentialTagsTokens = FimTags.entries.sumOf { it.charLength }
+        val essentialTagsTokens = FimTags.entries.sumOf { approximateTokenCount(it.charValue) }
         var availableTokens = tokenLimit - essentialTagsTokens
         val result = StringBuilder()
 
         // 1. Process file path (first priority)
-        val filePathString = filePath.toString()
-        val filePathTokens = approximateTokenCount(filePathString)
-        var filePathToUse = filePathString
+        val filePathString = fileSystemProvider.toAbsolutePathString(filePath)
+        val filePathTruncatedResult = asIsOrTruncated(filePathString, availableTokens, true)
+        val filePathToUse = filePathTruncatedResult.first
+        availableTokens = filePathTruncatedResult.second
 
-        if (filePathTokens <= availableTokens) {
-            availableTokens -= filePathTokens
-        } else {
-            val charsToKeep = availableTokens * 4
-            filePathToUse = filePathString.takeLast(charsToKeep) + ""
-            availableTokens = 0
-        }
-        
         // 2. Process prefix (second priority)
-        val prefixTokens = approximateTokenCount(prefix)
-        var prefixToUse = prefix
+        val prefixTruncatedResult = asIsOrTruncated(prefix, availableTokens, true)
+        val prefixToUse = prefixTruncatedResult.first
+        availableTokens = prefixTruncatedResult.second
 
-        if (prefixTokens <= availableTokens) {
-            availableTokens -= prefixTokens
-        } else {
-            val charsToKeep = availableTokens * 4
-            prefixToUse = prefix.takeLast(charsToKeep)
-            availableTokens = 0
-        }
-        
         // 3. Process suffix (third priority)
-        val suffixTokens = approximateTokenCount(suffix)
-        var suffixToUse = suffix
-        
-        if (suffixTokens <= availableTokens) {
-            availableTokens -= suffixTokens
-        } else {
-            val charsToKeep = availableTokens * 4
-            suffixToUse = suffix.take(charsToKeep)
-            availableTokens = 0
-        }
-        
+        val suffixTruncatedResult = asIsOrTruncated(suffix, availableTokens, false)
+        val suffixToUse = suffixTruncatedResult.first
+        availableTokens = suffixTruncatedResult.second
+
         // 4. Process context items (last priority, but first in prompt)
-        for ((path, content) in contextItems) {
+        for (item in contextItems) {
             if (availableTokens <= 0) break
-            
-            val pathString = path.toString()
-            val contextItemWithTag = "${FimTags.FILENAME.charValue}$pathString\n$content"
+
+            val contextItemWithTag = "${FimTags.FILENAME.charValue}${item.path}\n${item.content}"
             val contextItemTokens = approximateTokenCount(contextItemWithTag)
-            
+
             if (contextItemTokens <= availableTokens) {
                 result.append(contextItemWithTag)
                 availableTokens -= contextItemTokens
             }
         }
-        
+
         // Build the allocated part of the prompt
         result.append("${FimTags.FILENAME.charValue}$filePathToUse")
         result.append("${FimTags.PREFIX.charValue}$prefixToUse")
         result.append("${FimTags.SUFFIX.charValue}$suffixToUse")
         result.append(FimTags.MIDDLE.charValue)
         return result.toString()
+    }
+
+    private fun asIsOrTruncated(text: String, availableTokens: Int, takeLast: Boolean): Pair<String, Int> {
+        val textTokens = approximateTokenCount(text)
+        return if (textTokens <= availableTokens) {
+            Pair(text, availableTokens - textTokens)
+        } else {
+            val charsToKeep = availableTokens * 4
+            if (takeLast) {
+                Pair(text.takeLast(charsToKeep), 0)
+            } else {
+                Pair(text.take(charsToKeep), 0)
+            }
+        }
     }
 
     fun getCompletion(file: Path, position: Position): String = runBlocking {
@@ -130,12 +117,9 @@ class MellumCompletionService<Path, Document>(
             softTimeout = 50.milliseconds,
         )
 
-        val contextItems = mutableListOf<Pair<Path, String>>()
-        strategy.contexts(file, offset).collect { context ->
-            contextItems.add(context.path to context.content)
-        }
+        val contextItems = strategy.contexts(file, offset).toList()
         logger.info { "Collected ${contextItems.size} context items" }
-        
+
         val finalPrompt = prepareTokenLimitedPrompt(
             prefix = textBeforeCursor,
             suffix = textAfterCursor,
