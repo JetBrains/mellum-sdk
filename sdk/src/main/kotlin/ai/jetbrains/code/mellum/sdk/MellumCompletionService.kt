@@ -51,17 +51,17 @@ class MellumCompletionService<Path, Document>(
         val filePathString = fileSystemProvider.toAbsolutePathString(filePath)
         val filePathTruncatedResult = asIsOrTruncated(filePathString, availableTokens, true)
         val filePathToUse = filePathTruncatedResult.first
-        availableTokens = filePathTruncatedResult.second
+        availableTokens -= filePathTruncatedResult.second
 
         // 2. Process prefix (second priority)
         val prefixTruncatedResult = asIsOrTruncated(prefix, availableTokens, true)
         val prefixToUse = prefixTruncatedResult.first
-        availableTokens = prefixTruncatedResult.second
+        availableTokens -= prefixTruncatedResult.second
 
         // 3. Process suffix (third priority)
         val suffixTruncatedResult = asIsOrTruncated(suffix, availableTokens, false)
         val suffixToUse = suffixTruncatedResult.first
-        availableTokens = suffixTruncatedResult.second
+        availableTokens -= suffixTruncatedResult.second
 
         // 4. Process context items (last priority, but first in prompt)
         for (item in contextItems) {
@@ -84,16 +84,17 @@ class MellumCompletionService<Path, Document>(
         return result.toString()
     }
 
+    // Returns consumed number of tokens
     private fun asIsOrTruncated(text: String, availableTokens: Int, takeLast: Boolean): Pair<String, Int> {
         val textTokens = approximateTokenCount(text)
         return if (textTokens <= availableTokens) {
-            Pair(text, availableTokens - textTokens)
+            Pair(text, textTokens)
         } else {
             val charsToKeep = availableTokens * 4
             if (takeLast) {
-                Pair(text.takeLast(charsToKeep), 0)
+                Pair(text.takeLast(charsToKeep), availableTokens)
             } else {
-                Pair(text.take(charsToKeep), 0)
+                Pair(text.take(charsToKeep), availableTokens)
             }
         }
     }
