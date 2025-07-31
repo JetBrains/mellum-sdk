@@ -27,96 +27,7 @@ class MellumCompletionService<Path, Document>(
         private val logger = KotlinLogging.logger {}
     }
 
-    private enum class FimTags(val charValue: String) {
-        FILENAME("<filename>"),
-        SUFFIX("<fim_suffix>"),
-        PREFIX("<fim_prefix>"),
-        MIDDLE("<fim_middle>");
-    }
-
     private val completionExecutor = OllamaCompletionExecutor(ollamaClient, modelName)
-
-    private fun approximateTokenCount(text: String): Int {
-        return (text.length / 4) + 1
-    }
-
-    private suspend fun prepareTokenLimitedPrompt(
-        prefix: String,
-        suffix: String,
-        filePath: Path,
-        contextItems: List<CollectedContext<Path>>,
-        tokenLimit: Int
-    ): String {
-        val essentialTagsTokens = FimTags.entries.sumOf { approximateTokenCount(it.charValue) }
-        var availableTokens = tokenLimit - essentialTagsTokens
-        val result = StringBuilder()
-
-        // 1. Process file path (first priority)
-        val relativeFilePath = fileSystemProvider.relativize(
-            workspaceProvider.findWorkspaceRoot(filePath) ?: filePath, filePath
-        )
-        val filePathString = when (relativeFilePath) {
-            null, "" -> fileSystemProvider.toAbsolutePathString(filePath)
-            else -> relativeFilePath
-        }
-
-        val filePathTruncatedResult = asIsOrTruncated(filePathString, availableTokens, true)
-        val filePathToUse = filePathTruncatedResult.first
-        availableTokens -= filePathTruncatedResult.second
-
-        // 2. Process prefix (second priority)
-        val prefixTruncatedResult = asIsOrTruncated(prefix, availableTokens, true)
-        val prefixToUse = prefixTruncatedResult.first
-        availableTokens -= prefixTruncatedResult.second
-
-        // 3. Process suffix (third priority)
-        val suffixTruncatedResult = asIsOrTruncated(suffix, availableTokens, false)
-        val suffixToUse = suffixTruncatedResult.first
-        availableTokens -= suffixTruncatedResult.second
-
-        // 4. Process context items (last priority, but first in prompt)
-        for (item in contextItems) {
-            if (availableTokens <= 0) break
-
-            val relativeContextFilePath = fileSystemProvider.relativize(
-                workspaceProvider.findWorkspaceRoot(item.path) ?: item.path, item.path
-            )
-            val contextPath = when (relativeContextFilePath) {
-                null, "" -> fileSystemProvider.toAbsolutePathString(item.path)
-                else -> relativeContextFilePath
-            }
-
-            val contextItemWithTag = "${FimTags.FILENAME.charValue}$contextPath\n${item.content}"
-            val contextItemTokens = approximateTokenCount(contextItemWithTag)
-
-            if (contextItemTokens <= availableTokens) {
-                result.append(contextItemWithTag)
-                availableTokens -= contextItemTokens
-            }
-        }
-
-        // Build the allocated part of the prompt
-        result.append("${FimTags.FILENAME.charValue}$filePathToUse")
-        result.append("${FimTags.PREFIX.charValue}$prefixToUse")
-        result.append("${FimTags.SUFFIX.charValue}$suffixToUse")
-        result.append(FimTags.MIDDLE.charValue)
-        return result.toString()
-    }
-
-    // Returns consumed number of tokens
-    private fun asIsOrTruncated(text: String, availableTokens: Int, takeLast: Boolean): Pair<String, Int> {
-        val textTokens = approximateTokenCount(text)
-        return if (textTokens <= availableTokens) {
-            Pair(text, textTokens)
-        } else {
-            val charsToKeep = availableTokens * 4
-            if (takeLast) {
-                Pair(text.takeLast(charsToKeep), availableTokens)
-            } else {
-                Pair(text.take(charsToKeep), availableTokens)
-            }
-        }
-    }
 
     fun getCompletion(file: Path, position: Position): String = runBlocking {
         val fileContent = documentProvider.charsByPath(file) ?: return@runBlocking ""
@@ -152,5 +63,90 @@ class MellumCompletionService<Path, Document>(
 
         logger.info { "Got completion: $completion" }
         return@runBlocking completion
+    }
+
+    private fun approximateTokenCount(text: String): Int {
+        return (text.length / 4) + 1
+    }
+
+    private suspend fun prepareTokenLimitedPrompt(
+        prefix: String,
+        suffix: String,
+        filePath: Path,
+        contextItems: List<CollectedContext<Path>>,
+        tokenLimit: Int
+    ): String {
+        val essentialTagsTokens = FimTags.entries.sumOf { approximateTokenCount(it.charValue) }
+        var availableTokens = tokenLimit - essentialTagsTokens
+        val result = StringBuilder()
+
+        // 1. Process file path (first priority)
+        val filePathString = resolveActualPathToString(filePath)
+        val filePathTruncatedResult = asIsOrTruncated(filePathString, availableTokens, true)
+        val filePathToUse = filePathTruncatedResult.first
+        availableTokens -= filePathTruncatedResult.second
+
+        // 2. Process prefix (second priority)
+        val prefixTruncatedResult = asIsOrTruncated(prefix, availableTokens, true)
+        val prefixToUse = prefixTruncatedResult.first
+        availableTokens -= prefixTruncatedResult.second
+
+        // 3. Process suffix (third priority)
+        val suffixTruncatedResult = asIsOrTruncated(suffix, availableTokens, false)
+        val suffixToUse = suffixTruncatedResult.first
+        availableTokens -= suffixTruncatedResult.second
+
+        // 4. Process context items (last priority, but first in prompt)
+        for (item in contextItems) {
+            if (availableTokens <= 0) break
+
+            val contextPath = resolveActualPathToString(item.path)
+            val contextItemWithTag = "${FimTags.FILENAME.charValue}$contextPath\n${item.content}"
+            val contextItemTokens = approximateTokenCount(contextItemWithTag)
+
+            if (contextItemTokens <= availableTokens) {
+                result.append(contextItemWithTag)
+                availableTokens -= contextItemTokens
+            }
+        }
+
+        // Build the allocated part of the prompt
+        result.append("${FimTags.FILENAME.charValue}$filePathToUse")
+        result.append("${FimTags.PREFIX.charValue}$prefixToUse")
+        result.append("${FimTags.SUFFIX.charValue}$suffixToUse")
+        result.append(FimTags.MIDDLE.charValue)
+        return result.toString()
+    }
+
+    // Returns consumed number of tokens
+    private fun asIsOrTruncated(text: String, availableTokens: Int, takeLast: Boolean): Pair<String, Int> {
+        val textTokens = approximateTokenCount(text)
+        return if (textTokens <= availableTokens) {
+            Pair(text, textTokens)
+        } else {
+            val charsToKeep = availableTokens * 4
+            if (takeLast) {
+                Pair(text.takeLast(charsToKeep), availableTokens)
+            } else {
+                Pair(text.take(charsToKeep), availableTokens)
+            }
+        }
+    }
+
+    private suspend fun resolveActualPathToString(filePath: Path): String {
+        val relativeFilePath = fileSystemProvider.relativize(
+            workspaceProvider.findWorkspaceRoot(filePath) ?: filePath, filePath
+        )
+        return when (relativeFilePath) {
+            null, "" -> fileSystemProvider.toAbsolutePathString(filePath)
+            else -> relativeFilePath
+        }
+    }
+
+    private enum class FimTags(val charValue: String) {
+        FILENAME("<filename>"),
+        SUFFIX("<fim_suffix>"),
+        PREFIX("<fim_prefix>"),
+        MIDDLE("<fim_middle>");
     }
 }
