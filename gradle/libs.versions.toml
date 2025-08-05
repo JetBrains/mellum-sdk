@@ -11,9 +11,12 @@ code = "1.0.0-beta.94"
 [libraries]
 eclipse-lsp4 = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlin-logging"}
-code-features = { module = "ai.jetbrains.code.features:code-features-common-cli", version.ref = "code" }
+code-features-common = { module = "ai.jetbrains.code.features:code-features-common", version.ref = "code" }
+code-files-model = { module = "ai.jetbrains.code.files:code-files-model", version.ref = "code" }
+code-files-jvm = { module = "ai.jetbrains.code.files:code-files-jvm", version.ref = "code" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor3" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
