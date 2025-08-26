@@ -19,6 +19,7 @@ dependencies {
     api(libs.code.files.model)
     api(libs.eclipse.lsp4)
     api(libs.ktor.client.core)
+    api(libs.koog.rag.base)
 
     implementation(libs.code.features.common)
     implementation(libs.kotlin.logging)

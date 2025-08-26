@@ -8,6 +8,7 @@ import ai.grazie.code.files.model.DocumentProvider.Position
 import ai.jetbrains.code.mellum.sdk.ollama.DEFAULT_OLLAMA_MODEL_ID
 import ai.jetbrains.code.mellum.sdk.ollama.OllamaClient
 import ai.jetbrains.code.mellum.sdk.ollama.OllamaCompletionExecutor
+import ai.koog.rag.base.files.FileSystemProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking

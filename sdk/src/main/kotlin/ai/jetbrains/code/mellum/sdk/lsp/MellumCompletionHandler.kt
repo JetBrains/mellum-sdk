@@ -3,6 +3,7 @@ package ai.jetbrains.code.mellum.sdk.lsp
 import ai.grazie.code.files.model.*
 import ai.jetbrains.code.mellum.sdk.MellumCompletionService
 import ai.jetbrains.code.mellum.sdk.ollama.OllamaClient
+import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.coroutines.runBlocking
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionList
